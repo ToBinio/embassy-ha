@@ -6,6 +6,11 @@ pub const HA_DOMAIN_SWITCH: &str = "switch";
 pub const HA_DOMAIN_LIGHT: &str = "light";
 pub const HA_DOMAIN_BUTTON: &str = "button";
 pub const HA_DOMAIN_SELECT: &str = "select";
+pub const HA_DOMAIN_NUMBER: &str = "number";
+
+pub const HA_NUMBER_MODE_AUTO: &str = "auto";
+pub const HA_NUMBER_MODE_BOX: &str = "box";
+pub const HA_NUMBER_MODE_SLIDER: &str = "slider";
 
 pub const HA_DEVICE_CLASS_SENSOR_APPARENT_POWER: &str = "apparent_power";
 pub const HA_DEVICE_CLASS_SENSOR_AQI: &str = "aqi";
@@ -99,3 +104,25 @@ pub const HA_DEVICE_CLASS_SWITCH_SWITCH: &str = "switch";
 pub const HA_UNIT_TEMPERATURE_CELSIUS: &str = "°C";
 pub const HA_UNIT_TEMPERATURE_KELVIN: &str = "K";
 pub const HA_UNIT_TEMPERATURE_FAHRENHEIT: &str = "°F";
+
+pub const HA_UNIT_TIME_MILLISECONDS: &str = "ms";
+pub const HA_UNIT_TIME_SECONDS: &str = "s";
+pub const HA_UNIT_TIME_MINUTES: &str = "min";
+pub const HA_UNIT_TIME_HOURS: &str = "h";
+pub const HA_UNIT_TIME_DAYS: &str = "d";
+
+pub const HA_UNIT_PERCENTAGE: &str = "%";
+
+pub const HA_UNIT_POWER_WATT: &str = "W";
+pub const HA_UNIT_POWER_KILOWATT: &str = "kW";
+
+pub const HA_UNIT_VOLTAGE_VOLT: &str = "V";
+pub const HA_UNIT_CURRENT_AMPERE: &str = "A";
+
+pub const HA_UNIT_DISTANCE_MILLIMETER: &str = "mm";
+pub const HA_UNIT_DISTANCE_CENTIMETER: &str = "cm";
+pub const HA_UNIT_DISTANCE_METER: &str = "m";
+pub const HA_UNIT_DISTANCE_KILOMETER: &str = "km";
+
+pub const HA_ENTITY_CATEGORY_CONFIG: &str = "config";
+pub const HA_ENTITY_CATEGORY_DIAGNOSTIC: &str = "diagnostic";

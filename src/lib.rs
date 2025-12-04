@@ -1,14 +1,8 @@
 #![no_std]
 
-use core::{
-    cell::RefCell,
-    net::SocketAddrV4,
-    sync::atomic::{AtomicBool, AtomicU32},
-    task::Waker,
-};
+use core::{cell::RefCell, task::Waker};
 
 use defmt::Format;
-use embassy_net::tcp::TcpSocket;
 use embassy_sync::waitqueue::AtomicWaker;
 use embassy_time::Timer;
 use heapless::{
@@ -17,165 +11,12 @@ use heapless::{
 };
 use serde::Serialize;
 
-mod constants;
+pub mod constants;
 mod transport;
 mod unit;
 
-pub use constants::*;
 pub use transport::Transport;
 pub use unit::*;
-
-enum Unit {
-    Temperature(TemperatureUnit),
-}
-
-impl Unit {
-    fn as_str(&self) -> &'static str {
-        match self {
-            Unit::Temperature(unit) => unit.as_str(),
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum ComponentType {
-    Sensor,
-    BinarySensor,
-}
-
-impl core::fmt::Display for ComponentType {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-impl ComponentType {
-    fn as_str(&self) -> &'static str {
-        match self {
-            ComponentType::Sensor => "sensor",
-            ComponentType::BinarySensor => "binary_sensor",
-        }
-    }
-}
-
-// TODO: see what classes need this and defaults
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum StateClass {
-    Measurement,
-    Total,
-    TotalIncreasing,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum DeviceClass {
-    Temperature {
-        unit: TemperatureUnit,
-    },
-    Humidity {
-        unit: HumidityUnit,
-    },
-
-    // binary sensors
-    Door,
-    Window,
-    Motion,
-    Occupancy,
-    Opening,
-    Plug,
-    Presence,
-    Problem,
-    Safety,
-    Smoke,
-    Sound,
-    Vibration,
-
-    Battery {
-        unit: BatteryUnit,
-    },
-    Illuminance {
-        unit: LightUnit,
-    },
-    Pressure {
-        unit: PressureUnit,
-    },
-    Generic {
-        device_class: Option<&'static str>,
-        unit: Option<&'static str>,
-    },
-    Energy {
-        unit: EnergyUnit,
-    },
-}
-
-impl DeviceClass {
-    fn tag(&self) -> &'static str {
-        match self {
-            DeviceClass::Temperature { .. } => "temperature",
-            DeviceClass::Humidity { .. } => "humidity",
-            _ => todo!(),
-        }
-    }
-
-    fn unit_of_measurement(&self) -> Option<Unit> {
-        // TODO: fix
-        Some(Unit::Temperature(TemperatureUnit::Celcius))
-    }
-
-    fn component_type(&self) -> ComponentType {
-        match self {
-            DeviceClass::Temperature { .. } => ComponentType::Sensor,
-            DeviceClass::Humidity { .. } => ComponentType::Sensor,
-            DeviceClass::Door => ComponentType::BinarySensor,
-            DeviceClass::Window => ComponentType::BinarySensor,
-            _ => todo!(),
-        }
-    }
-}
-
-pub trait Entity {
-    // TODO: possibly collapse all these functions into a single one that returns a struct
-    fn id(&self) -> &'static str;
-    fn name(&self) -> &'static str;
-    fn device_class(&self) -> DeviceClass;
-    fn register_waker(&self, waker: &Waker);
-    fn value(&self) -> Option<StateValue>;
-}
-
-// TODO: figure out proper atomic orderings
-
-struct StateContainer {
-    dirty: AtomicBool,
-    waker: AtomicWaker,
-    value: StateContainerValue,
-}
-
-impl StateContainer {
-    const fn new(value: StateContainerValue) -> Self {
-        Self {
-            dirty: AtomicBool::new(false),
-            waker: AtomicWaker::new(),
-            value,
-        }
-    }
-
-    pub const fn new_u32() -> Self {
-        Self::new(StateContainerValue::U32(AtomicU32::new(0)))
-    }
-
-    pub const fn new_f32() -> Self {
-        Self::new(StateContainerValue::F32(AtomicU32::new(0)))
-    }
-}
-
-enum StateContainerValue {
-    U32(AtomicU32),
-    F32(AtomicU32),
-}
-
-pub enum StateValue {
-    U32(u32),
-    F32(f32),
-}
 
 #[derive(Debug, Format, Clone, Copy, Serialize)]
 struct DeviceDiscovery<'a> {
@@ -183,157 +24,6 @@ struct DeviceDiscovery<'a> {
     name: &'a str,
     manufacturer: &'a str,
     model: &'a str,
-}
-
-pub enum SensorKind {
-    Generic,
-    Temperature { unit: TemperatureUnit },
-    Humidity { unit: HumidityUnit },
-    // TODO: complete
-}
-
-impl SensorKind {
-    fn as_str(&self) -> &'static str {
-        match self {
-            SensorKind::Generic => "sensor",
-            SensorKind::Temperature { .. } => "temperature",
-            SensorKind::Humidity { .. } => "humidity",
-        }
-    }
-}
-
-impl core::fmt::Display for SensorKind {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-enum BinarySensorKind {
-    Generic,
-    Motion,
-    Door,
-    Window,
-    Occupancy,
-    // TODO: complete
-}
-
-impl BinarySensorKind {
-    fn as_str(&self) -> &'static str {
-        match self {
-            BinarySensorKind::Generic => "binary_sensor",
-            BinarySensorKind::Motion => "motion",
-            BinarySensorKind::Door => "door",
-            BinarySensorKind::Window => "window",
-            BinarySensorKind::Occupancy => "occupancy",
-        }
-    }
-}
-
-impl core::fmt::Display for BinarySensorKind {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-enum SwitchKind {
-    Generic,
-    Outlet,
-    Switch,
-}
-
-impl SwitchKind {
-    fn as_str(&self) -> &'static str {
-        match self {
-            SwitchKind::Generic => "switch",
-            SwitchKind::Outlet => "outlet",
-            SwitchKind::Switch => "switch",
-        }
-    }
-}
-
-impl core::fmt::Display for SwitchKind {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-enum ButtonKind {
-    Generic,
-    Identify,
-    Restart,
-    Update,
-}
-
-impl ButtonKind {
-    fn as_str(&self) -> &'static str {
-        match self {
-            ButtonKind::Generic => "button",
-            ButtonKind::Identify => "identify",
-            ButtonKind::Restart => "restart",
-            ButtonKind::Update => "update",
-        }
-    }
-}
-
-impl core::fmt::Display for ButtonKind {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-enum NumberKind {
-    Generic,
-    // TODO: alot of different ones
-    // https://www.home-assistant.io/integrations/number
-}
-
-impl NumberKind {
-    fn as_str(&self) -> &'static str {
-        match self {
-            NumberKind::Generic => "number",
-        }
-    }
-}
-
-impl core::fmt::Display for NumberKind {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-// this is called the component type in the ha api
-pub enum EntityDomain {
-    Sensor(SensorKind),
-    BinarySensor(BinarySensorKind),
-    Switch(SwitchKind),
-    Light,
-    Button(ButtonKind),
-    Select,
-}
-
-impl core::fmt::Display for EntityDomain {
-    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
-        f.write_str(self.as_str())
-    }
-}
-
-impl EntityDomain {
-    fn as_str(&self) -> &'static str {
-        match self {
-            EntityDomain::Sensor(_) => "sensor",
-            EntityDomain::BinarySensor(_) => "binary_sensor",
-            EntityDomain::Switch(_) => "switch",
-            EntityDomain::Light => "light",
-            EntityDomain::Button(_) => "button",
-            EntityDomain::Select => "select",
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum EntityCategory {
-    Config,
-    Diagnostic,
 }
 
 #[derive(Debug, Format, Serialize)]
@@ -363,6 +53,18 @@ struct EntityDiscovery<'a> {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     icon: Option<&'a str>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    min: Option<f32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    max: Option<f32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    step: Option<f32>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    mode: Option<&'a str>,
 
     device: &'a DeviceDiscovery<'a>,
 }
@@ -430,8 +132,6 @@ pub struct DeviceResources {
 }
 
 impl DeviceResources {
-    const RX_BUFFER_LEN: usize = 2048;
-    const TX_BUFFER_LEN: usize = 2048;
     const ENTITY_LIMIT: usize = 16;
 }
 
@@ -452,7 +152,7 @@ impl Default for DeviceResources {
     }
 }
 
-pub struct TemperatureSensor<'a>(Entity2<'a>);
+pub struct TemperatureSensor<'a>(Entity<'a>);
 
 impl<'a> TemperatureSensor<'a> {
     pub fn publish(&mut self, temperature: f32) {
@@ -462,7 +162,7 @@ impl<'a> TemperatureSensor<'a> {
     }
 }
 
-pub struct Button<'a>(Entity2<'a>);
+pub struct Button<'a>(Entity<'a>);
 
 impl<'a> Button<'a> {
     pub async fn pressed(&mut self) {
@@ -470,6 +170,35 @@ impl<'a> Button<'a> {
     }
 }
 
+pub struct Number<'a>(Entity<'a>);
+
+impl<'a> Number<'a> {
+    pub fn value(&mut self) -> Option<f32> {
+        self.0.with_data(|data| {
+            str::from_utf8(&data.command_value)
+                .ok()
+                .and_then(|v| v.parse::<f32>().ok())
+        })
+    }
+
+    pub async fn value_wait(&mut self) -> f32 {
+        loop {
+            self.0.wait_command().await;
+            match self.value() {
+                Some(value) => return value,
+                None => continue,
+            }
+        }
+    }
+
+    pub fn value_set(&mut self, value: f32) {
+        use core::fmt::Write;
+        self.0
+            .publish_with(|view| write!(view, "{}", value).unwrap());
+    }
+}
+
+#[derive(Default)]
 pub struct EntityConfig {
     pub id: &'static str,
     pub name: &'static str,
@@ -480,6 +209,10 @@ pub struct EntityConfig {
     pub category: Option<&'static str>,
     pub state_class: Option<&'static str>,
     pub schema: Option<&'static str>,
+    pub min: Option<f32>,
+    pub max: Option<f32>,
+    pub step: Option<f32>,
+    pub mode: Option<&'static str>,
 }
 
 struct EntityData {
@@ -489,14 +222,15 @@ struct EntityData {
     command_dirty: bool,
     command_value: heapless::Vec<u8, 64>,
     command_wait_waker: Option<Waker>,
+    command_instant: Option<embassy_time::Instant>,
 }
 
-pub struct Entity2<'a> {
+pub struct Entity<'a> {
     data: &'a RefCell<Option<EntityData>>,
     waker: &'a AtomicWaker,
 }
 
-impl<'a> Entity2<'a> {
+impl<'a> Entity<'a> {
     pub fn publish(&mut self, payload: &[u8]) {
         self.publish_with(|view| view.extend_from_slice(payload).unwrap());
     }
@@ -514,7 +248,7 @@ impl<'a> Entity2<'a> {
     }
 
     pub async fn wait_command(&mut self) {
-        struct Fut<'a, 'b>(&'a mut Entity2<'b>);
+        struct Fut<'a, 'b>(&'a mut Entity<'b>);
 
         impl<'a, 'b> core::future::Future for Fut<'a, 'b> {
             type Output = ();
@@ -590,7 +324,7 @@ impl<'a> Device<'a> {
         }
     }
 
-    pub fn create_entity(&self, config: EntityConfig) -> Entity2<'a> {
+    pub fn create_entity(&self, config: EntityConfig) -> Entity<'a> {
         let index = 'outer: {
             for idx in 0..self.entities.len() {
                 if self.entities[idx].borrow().is_none() {
@@ -607,10 +341,11 @@ impl<'a> Device<'a> {
             command_dirty: false,
             command_value: Default::default(),
             command_wait_waker: None,
+            command_instant: None,
         };
         self.entities[index].replace(Some(data));
 
-        Entity2 {
+        Entity {
             data: &self.entities[index],
             waker: self.waker,
         }
@@ -625,13 +360,10 @@ impl<'a> Device<'a> {
         let entity = self.create_entity(EntityConfig {
             id,
             name,
-            domain: HA_DOMAIN_SENSOR,
-            device_class: Some(HA_DEVICE_CLASS_SENSOR_TEMPERATURE),
+            domain: constants::HA_DOMAIN_SENSOR,
+            device_class: Some(constants::HA_DEVICE_CLASS_SENSOR_TEMPERATURE),
             measurement_unit: Some(unit.as_str()),
-            icon: None,
-            category: None,
-            state_class: None,
-            schema: None,
+            ..Default::default()
         });
         TemperatureSensor(entity)
     }
@@ -640,15 +372,25 @@ impl<'a> Device<'a> {
         let entity = self.create_entity(EntityConfig {
             id,
             name,
-            domain: HA_DOMAIN_BUTTON,
-            device_class: None,
-            measurement_unit: None,
-            icon: None,
-            category: None,
-            state_class: None,
-            schema: None,
+            domain: constants::HA_DOMAIN_BUTTON,
+            ..Default::default()
         });
         Button(entity)
+    }
+
+    pub fn create_number(&self, id: &'static str, name: &'static str) -> Number<'a> {
+        let entity = self.create_entity(EntityConfig {
+            id,
+            name,
+            domain: constants::HA_DOMAIN_NUMBER,
+            measurement_unit: Some("s"),
+            min: Some(0.0),
+            max: Some(200.0),
+            step: Some(2.0),
+            mode: Some(constants::HA_NUMBER_MODE_AUTO),
+            ..Default::default()
+        });
+        Number(entity)
     }
 
     pub async fn run<T: Transport>(&mut self, transport: &mut T) -> ! {
@@ -732,6 +474,10 @@ impl<'a> Device<'a> {
                     schema: entity_config.schema,
                     state_class: entity_config.state_class,
                     icon: entity_config.icon,
+                    min: entity_config.min,
+                    max: entity_config.max,
+                    step: entity_config.step,
+                    mode: entity_config.mode,
                     device: &device_discovery,
                 };
                 defmt::info!("discovery: {}", discovery);
@@ -812,7 +558,8 @@ impl<'a> Device<'a> {
                                 if let Some(entity) = entity.as_mut() {
                                     entity.command_dirty = true;
                                     entity.command_value.clear();
-                                    entity.command_value.extend_from_slice(b"ON").unwrap();
+                                    entity.command_value.extend_from_slice(b).unwrap();
+                                    entity.command_instant = Some(embassy_time::Instant::now());
                                     if let Some(ref waker) = entity.command_wait_waker {
                                         waker.wake_by_ref();
                                     }

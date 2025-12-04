@@ -1,0 +1,11 @@
+[package]
+name = "embedded-mqtt"
+version = "0.1.0"
+edition = "2024"
+
+[features]
+embassy-net = ["dep:embassy-net"]
+
+[dependencies]
+embassy-net = { version = "0.7", features = ["tcp", "proto-ipv4", "medium-ip"], optional = true }
+embedded-io-async = "0.6"

@@ -1,0 +1,16 @@
+[package]
+name = "embassy-ha"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+embedded-mqtt = { path = "./embedded-mqtt" , features = ["embassy-net"] }
+embassy-net = { version = "0.7.1", features = ["defmt", "medium-ip", "proto-ipv4", "tcp"] }
+heapless = "0.9.2"
+embassy-time = { version = "0.5.0" }
+serde-json-core = "0.6.0"
+serde = { version = "1.0.228", default-features = false, features = ["derive"] }
+defmt = "1.0.1"
+embassy-sync = { version = "0.7.2", features = ["defmt"] }
+embassy-futures = "0.1.2"
+embedded-io-async = "0.6"

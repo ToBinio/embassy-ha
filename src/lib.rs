@@ -1,6 +1,6 @@
 #![no_std]
 
-use core::{cell::RefCell, task::Waker};
+use core::{cell::RefCell, str::FromStr, task::Waker};
 
 use defmt::Format;
 use embassy_sync::waitqueue::AtomicWaker;
@@ -198,6 +198,90 @@ impl<'a> Number<'a> {
     }
 }
 
+pub struct InvalidSwitchState;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SwitchState {
+    On,
+    Off,
+}
+
+impl SwitchState {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::On => constants::HA_SWITCH_STATE_ON,
+            Self::Off => constants::HA_SWITCH_STATE_OFF,
+        }
+    }
+}
+
+impl core::fmt::Display for SwitchState {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.write_str(self.as_str())
+    }
+}
+
+impl FromStr for SwitchState {
+    type Err = InvalidSwitchState;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        if s.eq_ignore_ascii_case(constants::HA_SWITCH_STATE_ON) {
+            return Ok(Self::On);
+        }
+        if s.eq_ignore_ascii_case(constants::HA_SWITCH_STATE_OFF) {
+            return Ok(Self::Off);
+        }
+        Err(InvalidSwitchState)
+    }
+}
+
+impl TryFrom<&[u8]> for SwitchState {
+    type Error = InvalidSwitchState;
+
+    fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+        let string = str::from_utf8(value).map_err(|_| InvalidSwitchState)?;
+        string.parse()
+    }
+}
+
+pub struct Switch<'a>(Entity<'a>);
+
+impl<'a> Switch<'a> {
+    pub fn state(&self) -> Option<SwitchState> {
+        self.0
+            .with_data(|data| SwitchState::try_from(data.command_value.as_slice()).ok())
+    }
+
+    pub fn toggle(&mut self) -> SwitchState {
+        let curr_state = self.state().unwrap_or(SwitchState::Off);
+        let new_state = match curr_state {
+            SwitchState::On => SwitchState::Off,
+            SwitchState::Off => SwitchState::On,
+        };
+        self.set(new_state);
+        new_state
+    }
+
+    pub fn set(&mut self, state: SwitchState) {
+        self.0.publish(
+            match state {
+                SwitchState::On => constants::HA_SWITCH_STATE_ON,
+                SwitchState::Off => constants::HA_SWITCH_STATE_OFF,
+            }
+            .as_bytes(),
+        );
+    }
+
+    pub async fn wait(&mut self) -> SwitchState {
+        loop {
+            self.0.wait_command().await;
+            if let Some(state) = self.state() {
+                return state;
+            }
+        }
+    }
+}
+
 #[derive(Default)]
 pub struct EntityConfig {
     pub id: &'static str,
@@ -391,6 +475,16 @@ impl<'a> Device<'a> {
             ..Default::default()
         });
         Number(entity)
+    }
+
+    pub fn create_switch(&self, id: &'static str, name: &'static str) -> Switch<'a> {
+        let entity = self.create_entity(EntityConfig {
+            id,
+            name,
+            domain: constants::HA_DOMAIN_SWITCH,
+            ..Default::default()
+        });
+        Switch(entity)
     }
 
     pub async fn run<T: Transport>(&mut self, transport: &mut T) -> ! {

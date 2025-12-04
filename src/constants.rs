@@ -126,3 +126,6 @@ pub const HA_UNIT_DISTANCE_KILOMETER: &str = "km";
 
 pub const HA_ENTITY_CATEGORY_CONFIG: &str = "config";
 pub const HA_ENTITY_CATEGORY_DIAGNOSTIC: &str = "diagnostic";
+
+pub const HA_SWITCH_STATE_ON: &str = "ON";
+pub const HA_SWITCH_STATE_OFF: &str = "OFF";

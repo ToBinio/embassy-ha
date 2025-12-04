@@ -35,7 +35,7 @@ async fn main_task(spawner: Spawner) {
 #[embassy_executor::task]
 async fn temperature(mut sensor: embassy_ha::TemperatureSensor<'static>) {
     loop {
-        sensor.publish(42.0);
+        sensor.publish(rand::random_range(0.0..50.0));
         Timer::after_secs(1).await;
     }
 }

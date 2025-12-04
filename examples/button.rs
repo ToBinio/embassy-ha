@@ -2,7 +2,6 @@ mod common;
 
 use common::AsyncTcp;
 use embassy_executor::{Executor, Spawner};
-use embassy_time::Timer;
 use static_cell::StaticCell;
 
 static RESOURCES: StaticCell<embassy_ha::DeviceResources> = StaticCell::new();
@@ -21,22 +20,18 @@ async fn main_task(spawner: Spawner) {
         },
     );
 
-    let temperature_sensor = device.create_temperature_sensor(
-        "temperature-sensor-id",
-        "Temperature Sensor Name",
-        embassy_ha::TemperatureUnit::Celcius,
-    );
+    let button = device.create_button("button-sensor-id", "Button Name");
 
-    spawner.must_spawn(temperature(temperature_sensor));
+    spawner.must_spawn(button_task(button));
 
     device.run(&mut stream).await;
 }
 
 #[embassy_executor::task]
-async fn temperature(mut sensor: embassy_ha::TemperatureSensor<'static>) {
+async fn button_task(mut button: embassy_ha::Button<'static>) {
     loop {
-        sensor.publish(42.0);
-        Timer::after_secs(1).await;
+        button.pressed().await;
+        println!("The button has been pressed");
     }
 }
 

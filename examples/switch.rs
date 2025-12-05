@@ -41,7 +41,6 @@ async fn main_task(spawner: Spawner) {
 async fn switch_task(mut switch: embassy_ha::Switch<'static>) {
     loop {
         let state = switch.wait().await;
-        switch.set(state);
 
         println!("state = {}", state);
         Timer::after_secs(1).await;

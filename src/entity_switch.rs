@@ -8,10 +8,21 @@ pub enum SwitchClass {
     Switch,
 }
 
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct SwitchConfig {
     pub common: EntityCommonConfig,
     pub class: SwitchClass,
+    pub publish_on_command: bool,
+}
+
+impl Default for SwitchConfig {
+    fn default() -> Self {
+        Self {
+            common: Default::default(),
+            class: Default::default(),
+            publish_on_command: true,
+        }
+    }
 }
 
 impl SwitchConfig {
@@ -40,6 +51,13 @@ impl<'a> Switch<'a> {
         })
     }
 
+    pub fn command(&self) -> Option<BinaryState> {
+        self.0.with_data(|data| {
+            let storage = data.storage.as_switch_mut();
+            storage.command.as_ref().map(|s| s.value)
+        })
+    }
+
     pub fn toggle(&mut self) -> BinaryState {
         let new_state = self.state().unwrap_or(BinaryState::Off).flip();
         self.set(new_state);
@@ -59,7 +77,7 @@ impl<'a> Switch<'a> {
     pub async fn wait(&mut self) -> BinaryState {
         loop {
             self.0.wait_command().await;
-            if let Some(state) = self.state() {
+            if let Some(state) = self.command() {
                 return state;
             }
         }

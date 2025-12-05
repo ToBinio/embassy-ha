@@ -219,6 +219,7 @@ pub struct SwitchState {
 pub struct SwitchStorage {
     pub state: Option<SwitchState>,
     pub command: Option<SwitchCommand>,
+    pub publish_on_command: bool,
 }
 
 #[derive(Debug)]
@@ -460,7 +461,13 @@ impl<'a> Device<'a> {
         entity_config.id = id;
         config.populate(&mut entity_config);
 
-        let entity = self.create_entity(entity_config, EntityStorage::Switch(Default::default()));
+        let entity = self.create_entity(
+            entity_config,
+            EntityStorage::Switch(SwitchStorage {
+                publish_on_command: config.publish_on_command,
+                ..Default::default()
+            }),
+        );
         Switch::new(entity)
     }
 

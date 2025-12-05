@@ -70,6 +70,7 @@ pub struct NumberConfig {
     pub step: Option<f32>,
     pub mode: NumberMode,
     pub class: NumberClass,
+    pub publish_on_command: bool,
 }
 
 impl Default for NumberConfig {
@@ -82,6 +83,7 @@ impl Default for NumberConfig {
             step: None,
             mode: NumberMode::Auto,
             class: NumberClass::Generic,
+            publish_on_command: true,
         }
     }
 }
@@ -169,24 +171,31 @@ impl<'a> Number<'a> {
         Self(entity)
     }
 
-    pub fn get(&mut self) -> Option<f32> {
+    pub fn state(&mut self) -> Option<f32> {
         self.0.with_data(|data| {
             let storage = data.storage.as_number_mut();
             storage.state.as_ref().map(|s| s.value)
         })
     }
 
+    pub fn command(&self) -> Option<f32> {
+        self.0.with_data(|data| {
+            let storage = data.storage.as_number_mut();
+            storage.command.as_ref().map(|s| s.value)
+        })
+    }
+
     pub async fn wait(&mut self) -> f32 {
         loop {
             self.0.wait_command().await;
-            match self.get() {
+            match self.command() {
                 Some(value) => return value,
                 None => continue,
             }
         }
     }
 
-    pub fn set(&mut self, value: f32) {
+    pub fn publish(&mut self, value: f32) {
         let publish = self.0.with_data(|data| {
             let storage = data.storage.as_number_mut();
             let timestamp = embassy_time::Instant::now();

@@ -34,6 +34,7 @@ async fn main_task(spawner: Spawner) {
             step: Some(0.5),
             mode: embassy_ha::NumberMode::Slider,
             class: embassy_ha::NumberClass::Distance,
+            ..Default::default()
         },
     );
 
@@ -46,7 +47,7 @@ async fn main_task(spawner: Spawner) {
 async fn number_task(mut number: embassy_ha::Number<'static>) {
     loop {
         let value = number.wait().await;
-        number.set(value);
+        tracing::info!("value = {}", value);
         Timer::after_secs(1).await;
     }
 }

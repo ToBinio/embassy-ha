@@ -264,6 +264,7 @@ pub struct NumberCommand {
 pub struct NumberStorage {
     pub state: Option<NumberState>,
     pub command: Option<NumberCommand>,
+    pub publish_on_command: bool,
 }
 
 #[derive(Debug)]
@@ -456,7 +457,13 @@ impl<'a> Device<'a> {
         entity_config.id = id;
         config.populate(&mut entity_config);
 
-        let entity = self.create_entity(entity_config, EntityStorage::Number(Default::default()));
+        let entity = self.create_entity(
+            entity_config,
+            EntityStorage::Number(NumberStorage {
+                publish_on_command: config.publish_on_command,
+                ..Default::default()
+            }),
+        );
         Number::new(entity)
     }
 
@@ -494,7 +501,10 @@ impl<'a> Device<'a> {
     pub async fn run<T: Transport>(&mut self, transport: &mut T) -> Result<(), Error> {
         let mut client = embedded_mqtt::Client::new(self.mqtt_resources, transport);
         if let Err(err) = client.connect(self.config.device_id).await {
-            crate::log::error!("mqtt connect failed with: {:?}", crate::log::Debug2Format(&err));
+            crate::log::error!(
+                "mqtt connect failed with: {:?}",
+                crate::log::Debug2Format(&err)
+            );
             return Err(Error::new("mqtt connection failed"));
         }
 
@@ -565,7 +575,11 @@ impl<'a> Device<'a> {
                     mode: entity_config.mode,
                     device: &device_discovery,
                 };
-                crate::log::debug!("discovery for entity '{}': {:?}", entity_config.id, discovery);
+                crate::log::debug!(
+                    "discovery for entity '{}': {:?}",
+                    entity_config.id,
+                    discovery
+                );
 
                 self.discovery_buffer
                     .resize(self.discovery_buffer.capacity(), 0)
@@ -679,7 +693,10 @@ impl<'a> Device<'a> {
                 embassy_futures::select::Either::First(packet) => match packet {
                     Ok(embedded_mqtt::Packet::Publish(publish)) => publish,
                     Err(err) => {
-                        crate::log::error!("mqtt receive failed with: {:?}", crate::log::Debug2Format(&err));
+                        crate::log::error!(
+                            "mqtt receive failed with: {:?}",
+                            crate::log::Debug2Format(&err)
+                        );
                         return Err(Error::new("mqtt receive failed"));
                     }
                     _ => continue,
@@ -797,9 +814,17 @@ impl<'a> Device<'a> {
                             continue;
                         }
                     };
+                    let timestamp = embassy_time::Instant::now();
+                    if number_storage.publish_on_command {
+                        data.publish = true;
+                        number_storage.state = Some(NumberState {
+                            value: command,
+                            timestamp,
+                        });
+                    }
                     number_storage.command = Some(NumberCommand {
                         value: command,
-                        timestamp: embassy_time::Instant::now(),
+                        timestamp,
                     });
                 }
                 _ => continue 'outer_loop,

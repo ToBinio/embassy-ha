@@ -1,4 +1,5 @@
 use std::{
+    future::Future,
     io::{Read, Write},
     net::{TcpStream, ToSocketAddrs},
     sync::{Arc, Mutex},
@@ -16,7 +17,9 @@ pub struct AsyncTcp {
 
 impl AsyncTcp {
     pub fn connect(addr: impl ToSocketAddrs) -> Self {
+        tracing::info!("Connecting to TCP server");
         let stream = TcpStream::connect(addr).expect("failed to connect to remote");
+        tracing::info!("TCP connection established");
         let mut read_stream = stream.try_clone().unwrap();
         let mut write_stream = stream;
 
@@ -34,9 +37,10 @@ impl AsyncTcp {
                         std::mem::take(&mut *buffer)
                     };
                     if !buffer.is_empty() {
-                        println!("writing {} bytes", buffer.len());
+                        let len = buffer.len();
                         write_stream.write_all(&buffer).unwrap();
                         write_stream.flush().unwrap();
+                        tracing::debug!("Wrote {} bytes to TCP stream", len);
                     } else {
                         std::thread::park();
                     }
@@ -52,9 +56,11 @@ impl AsyncTcp {
                 loop {
                     let n = read_stream.read(&mut scratch).unwrap();
                     if n == 0 {
+                        tracing::warn!("TCP stream closed (EOF)");
                         panic!("EOF");
                     }
 
+                    tracing::debug!("Read {} bytes from TCP stream", n);
                     {
                         let mut buffer = read_buffer.lock().unwrap();
                         buffer.extend_from_slice(&scratch[..n]);
@@ -79,6 +85,7 @@ impl embedded_io_async::ErrorType for AsyncTcp {
 
 impl embedded_io_async::Write for AsyncTcp {
     async fn write(&mut self, buf: &[u8]) -> Result<usize, Self::Error> {
+        tracing::trace!("Queueing {} bytes for write", buf.len());
         {
             let mut buffer = self.write_buffer.lock().unwrap();
             buffer.extend_from_slice(buf);
@@ -116,6 +123,7 @@ impl embedded_io_async::Read for AsyncTcp {
                     let copy_n = buf.len().min(buffer.len());
                     buf[..copy_n].copy_from_slice(&buffer[..copy_n]);
                     buffer.drain(..copy_n);
+                    tracing::trace!("Async read returned {} bytes", copy_n);
                     return Ok(copy_n);
                 }
             }

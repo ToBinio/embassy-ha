@@ -41,7 +41,7 @@ async fn main_task(spawner: Spawner) {
 async fn binary_sensor_class(mut switch: embassy_ha::BinarySensor<'static>) {
     loop {
         let state = switch.toggle();
-        println!("state = {}", state);
+        tracing::info!("state = {}", state);
         Timer::after_secs(2).await;
     }
 }

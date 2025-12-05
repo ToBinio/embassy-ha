@@ -9,6 +9,14 @@ pub static EXECUTOR: StaticCell<Executor> = StaticCell::new();
 macro_rules! example_main {
     () => {
         fn main() {
+            // Initialize tracing if tracing feature is enabled
+            #[cfg(feature = "tracing")]
+            {
+                tracing_subscriber::fmt()
+                    .with_max_level(tracing::Level::DEBUG)
+                    .init();
+            }
+
             let executor = common::EXECUTOR.init(Executor::new());
             executor.run(|spawner| {
                 spawner.must_spawn(main_task(spawner));

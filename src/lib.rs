@@ -2,13 +2,15 @@
 
 use core::{cell::RefCell, task::Waker};
 
-use defmt::Format;
 use embassy_sync::waitqueue::AtomicWaker;
 use heapless::{
     Vec, VecView,
     string::{String, StringView},
 };
 use serde::Serialize;
+
+pub mod log;
+pub use log::Format;
 
 pub mod constants;
 
@@ -59,7 +61,8 @@ impl Error {
     }
 }
 
-#[derive(Debug, Format, Clone, Copy, Serialize)]
+#[derive(Debug, Clone, Copy, Serialize)]
+#[cfg_attr(feature = "defmt", derive(Format))]
 struct DeviceDiscovery<'a> {
     identifiers: &'a [&'a str],
     name: &'a str,
@@ -67,7 +70,8 @@ struct DeviceDiscovery<'a> {
     model: &'a str,
 }
 
-#[derive(Debug, Format, Serialize)]
+#[derive(Debug, Serialize)]
+#[cfg_attr(feature = "defmt", derive(Format))]
 struct EntityDiscovery<'a> {
     #[serde(rename = "unique_id")]
     id: &'a str,
@@ -490,11 +494,11 @@ impl<'a> Device<'a> {
     pub async fn run<T: Transport>(&mut self, transport: &mut T) -> Result<(), Error> {
         let mut client = embedded_mqtt::Client::new(self.mqtt_resources, transport);
         if let Err(err) = client.connect(self.config.device_id).await {
-            defmt::error!("mqtt connect failed with: {:?}", defmt::Debug2Format(&err));
+            crate::log::error!("mqtt connect failed with: {:?}", crate::log::Debug2Format(&err));
             return Err(Error::new("mqtt connection failed"));
         }
 
-        defmt::debug!("sending discover messages");
+        crate::log::debug!("sending discover messages");
         let device_discovery = DeviceDiscovery {
             identifiers: &[self.config.device_id],
             name: self.config.device_name,
@@ -561,7 +565,7 @@ impl<'a> Device<'a> {
                     mode: entity_config.mode,
                     device: &device_discovery,
                 };
-                defmt::debug!("discovery for entity '{}': {}", entity_config.id, discovery);
+                crate::log::debug!("discovery for entity '{}': {:?}", entity_config.id, discovery);
 
                 self.discovery_buffer
                     .resize(self.discovery_buffer.capacity(), 0)
@@ -572,25 +576,25 @@ impl<'a> Device<'a> {
             }
 
             let discovery_topic = self.discovery_topic_buffer.as_str();
-            defmt::debug!("sending discovery to topic '{}'", discovery_topic);
+            crate::log::debug!("sending discovery to topic '{}'", discovery_topic);
             if let Err(err) = client
                 .publish(discovery_topic, &self.discovery_buffer)
                 .await
             {
-                defmt::error!(
+                crate::log::error!(
                     "mqtt discovery publish failed with: {:?}",
-                    defmt::Debug2Format(&err)
+                    crate::log::Debug2Format(&err)
                 );
                 return Err(Error::new("mqtt discovery publish failed"));
             }
 
             let command_topic = self.command_topic_buffer.as_str();
-            defmt::debug!("subscribing to command topic '{}'", command_topic);
+            crate::log::debug!("subscribing to command topic '{}'", command_topic);
             if let Err(err) = client.subscribe(command_topic).await {
-                defmt::error!(
+                crate::log::error!(
                     "mqtt subscribe to '{}' failed with: {:?}",
                     command_topic,
-                    defmt::Debug2Format(&err)
+                    crate::log::Debug2Format(&err)
                 );
                 return Err(Error::new(
                     "mqtt subscription to entity command topic failed",
@@ -641,7 +645,7 @@ impl<'a> Device<'a> {
                         }) => write!(self.publish_buffer, "{}", value)
                             .expect("publish buffer too small for number state payload"),
                         _ => {
-                            defmt::warn!(
+                            crate::log::warn!(
                                 "entity '{}' requested state publish but its storage does not support it",
                                 entity.config.id
                             );
@@ -660,10 +664,10 @@ impl<'a> Device<'a> {
 
                 let state_topic = self.state_topic_buffer.as_str();
                 if let Err(err) = client.publish(state_topic, self.publish_buffer).await {
-                    defmt::error!(
+                    crate::log::error!(
                         "mqtt state publish on topic '{}' failed with: {:?}",
                         state_topic,
-                        defmt::Debug2Format(&err)
+                        crate::log::Debug2Format(&err)
                     );
                     return Err(Error::new("mqtt publish failed"));
                 }
@@ -675,7 +679,7 @@ impl<'a> Device<'a> {
                 embassy_futures::select::Either::First(packet) => match packet {
                     Ok(embedded_mqtt::Packet::Publish(publish)) => publish,
                     Err(err) => {
-                        defmt::error!("mqtt receive failed with: {:?}", defmt::Debug2Format(&err));
+                        crate::log::error!("mqtt receive failed with: {:?}", crate::log::Debug2Format(&err));
                         return Err(Error::new("mqtt receive failed"));
                     }
                     _ => continue,
@@ -708,7 +712,7 @@ impl<'a> Device<'a> {
 
             let mut read_buffer = [0u8; 128];
             if publish.data_len > read_buffer.len() {
-                defmt::warn!(
+                crate::log::warn!(
                     "mqtt publish payload on topic {} is too large ({} bytes), ignoring it",
                     publish.topic,
                     publish.data_len
@@ -716,7 +720,7 @@ impl<'a> Device<'a> {
                 continue;
             }
 
-            defmt::debug!(
+            crate::log::debug!(
                 "mqtt receiving {} bytes of data on topic {}",
                 publish.data_len,
                 publish.topic
@@ -724,9 +728,9 @@ impl<'a> Device<'a> {
 
             let data_len = publish.data_len;
             if let Err(err) = client.receive_data(&mut read_buffer[..data_len]).await {
-                defmt::error!(
+                crate::log::error!(
                     "mqtt receive data failed with: {:?}",
-                    defmt::Debug2Format(&err)
+                    crate::log::Debug2Format(&err)
                 );
                 return Err(Error::new("mqtt receive data failed"));
             }
@@ -734,7 +738,7 @@ impl<'a> Device<'a> {
             let command = match str::from_utf8(&read_buffer[..data_len]) {
                 Ok(command) => command,
                 Err(_) => {
-                    defmt::warn!("mqtt message contained invalid utf-8, ignoring it");
+                    crate::log::warn!("mqtt message contained invalid utf-8, ignoring it");
                     continue;
                 }
             };
@@ -745,7 +749,7 @@ impl<'a> Device<'a> {
             match &mut data.storage {
                 EntityStorage::Button(button_storage) => {
                     if command != constants::HA_BUTTON_PAYLOAD_PRESS {
-                        defmt::warn!(
+                        crate::log::warn!(
                             "button '{}' received unexpected command '{}', expected '{}', ignoring it",
                             data.config.id,
                             command,
@@ -760,7 +764,7 @@ impl<'a> Device<'a> {
                     let command = match command.parse::<BinaryState>() {
                         Ok(command) => command,
                         Err(_) => {
-                            defmt::warn!(
+                            crate::log::warn!(
                                 "switch '{}' received invalid command '{}', expected 'ON' or 'OFF', ignoring it",
                                 data.config.id,
                                 command
@@ -768,16 +772,24 @@ impl<'a> Device<'a> {
                             continue;
                         }
                     };
+                    let timestamp = embassy_time::Instant::now();
+                    if switch_storage.publish_on_command {
+                        data.publish = true;
+                        switch_storage.state = Some(SwitchState {
+                            value: command,
+                            timestamp,
+                        });
+                    }
                     switch_storage.command = Some(SwitchCommand {
                         value: command,
-                        timestamp: embassy_time::Instant::now(),
+                        timestamp,
                     });
                 }
                 EntityStorage::Number(number_storage) => {
                     let command = match command.parse::<f32>() {
                         Ok(command) => command,
                         Err(_) => {
-                            defmt::warn!(
+                            crate::log::warn!(
                                 "number '{}' received invalid command '{}', expected a valid number, ignoring it",
                                 data.config.id,
                                 command

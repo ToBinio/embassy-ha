@@ -31,7 +31,7 @@ async fn main_task(spawner: Spawner) {
 async fn button_task(mut button: embassy_ha::Button<'static>) {
     loop {
         button.pressed().await;
-        println!("The button has been pressed");
+        tracing::info!("The button has been pressed");
     }
 }
 

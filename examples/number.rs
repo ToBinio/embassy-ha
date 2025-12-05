@@ -39,7 +39,7 @@ async fn main_task(spawner: Spawner) {
 
     spawner.must_spawn(number_task(number));
 
-    device.run(&mut stream).await;
+    device.run(&mut stream).await.unwrap();
 }
 
 #[embassy_executor::task]

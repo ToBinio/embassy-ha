@@ -34,7 +34,7 @@ async fn main_task(spawner: Spawner) {
 
     spawner.must_spawn(binary_sensor_class(sensor));
 
-    device.run(&mut stream).await;
+    device.run(&mut stream).await.unwrap();
 }
 
 #[embassy_executor::task]

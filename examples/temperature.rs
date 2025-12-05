@@ -46,7 +46,7 @@ async fn main_task(spawner: Spawner) {
     spawner.must_spawn(constant_temperature_task(constant_temperature_sensor));
     spawner.must_spawn(random_temperature_task(random_temperature_sensor));
 
-    device.run(&mut stream).await;
+    device.run(&mut stream).await.unwrap();
 }
 
 #[embassy_executor::task]

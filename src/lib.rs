@@ -487,7 +487,7 @@ impl<'a> Device<'a> {
             return Err(Error::new("mqtt connection failed"));
         }
 
-        defmt::info!("sending discover messages");
+        defmt::debug!("sending discover messages");
         let device_discovery = DeviceDiscovery {
             identifiers: &[self.config.device_id],
             name: self.config.device_name,
@@ -554,7 +554,7 @@ impl<'a> Device<'a> {
                     mode: entity_config.mode,
                     device: &device_discovery,
                 };
-                defmt::info!("discovery for entity '{}': {}", entity_config.id, discovery);
+                defmt::debug!("discovery for entity '{}': {}", entity_config.id, discovery);
 
                 self.discovery_buffer
                     .resize(self.discovery_buffer.capacity(), 0)
@@ -565,7 +565,7 @@ impl<'a> Device<'a> {
             }
 
             let discovery_topic = self.discovery_topic_buffer.as_str();
-            defmt::info!("sending discovery to topic '{}'", discovery_topic);
+            defmt::debug!("sending discovery to topic '{}'", discovery_topic);
             if let Err(err) = client
                 .publish(discovery_topic, &self.discovery_buffer)
                 .await
@@ -578,7 +578,7 @@ impl<'a> Device<'a> {
             }
 
             let command_topic = self.command_topic_buffer.as_str();
-            defmt::info!("subscribing to command topic '{}'", command_topic);
+            defmt::debug!("subscribing to command topic '{}'", command_topic);
             if let Err(err) = client.subscribe(command_topic).await {
                 defmt::error!(
                     "mqtt subscribe to '{}' failed with: {:?}",
@@ -709,7 +709,7 @@ impl<'a> Device<'a> {
                 continue;
             }
 
-            defmt::info!(
+            defmt::debug!(
                 "mqtt receiving {} bytes of data on topic {}",
                 publish.data_len,
                 publish.topic

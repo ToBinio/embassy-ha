@@ -2,6 +2,24 @@ use crate::{
     Entity, EntityCommonConfig, EntityConfig, NumericSensorState, TemperatureUnit, constants,
 };
 
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum StateClass {
+    #[default]
+    Measurement,
+    Total,
+    TotalIncreasing,
+}
+
+impl StateClass {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            StateClass::Measurement => constants::HA_STATE_CLASS_MEASUREMENT,
+            StateClass::Total => constants::HA_STATE_CLASS_TOTAL,
+            StateClass::TotalIncreasing => constants::HA_STATE_CLASS_TOTAL_INCREASING,
+        }
+    }
+}
+
 #[derive(Debug, Default)]
 pub struct TemperatureSensorConfig {
     pub common: EntityCommonConfig,

@@ -12,6 +12,10 @@ pub const HA_NUMBER_MODE_AUTO: &str = "auto";
 pub const HA_NUMBER_MODE_BOX: &str = "box";
 pub const HA_NUMBER_MODE_SLIDER: &str = "slider";
 
+pub const HA_STATE_CLASS_MEASUREMENT: &str = "measurement";
+pub const HA_STATE_CLASS_TOTAL: &str = "total";
+pub const HA_STATE_CLASS_TOTAL_INCREASING: &str = "total_increasing";
+
 pub const HA_DEVICE_CLASS_SENSOR_APPARENT_POWER: &str = "apparent_power";
 pub const HA_DEVICE_CLASS_SENSOR_AQI: &str = "aqi";
 pub const HA_DEVICE_CLASS_SENSOR_ATMOSPHERIC_PRESSURE: &str = "atmospheric_pressure";

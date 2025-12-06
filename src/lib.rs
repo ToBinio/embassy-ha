@@ -1,8 +1,10 @@
 #![no_std]
 
-use core::{cell::RefCell, task::Waker};
+use core::{cell::RefCell, net::{Ipv4Addr, SocketAddrV4}, task::Waker};
 
+use embassy_net::tcp::TcpSocket;
 use embassy_sync::waitqueue::AtomicWaker;
+use embassy_time::Timer;
 use heapless::{
     Vec, VecView,
     string::{String, StringView},
@@ -901,6 +903,105 @@ impl<'a> Device<'a> {
             if let Some(waker) = data.command_waker.take() {
                 waker.wake();
             }
+        }
+    }
+}
+
+pub async fn connect_and_run(
+    stack: embassy_net::Stack<'_>,
+    mut device: Device<'_>,
+    address: &str,
+) -> ! {
+    const DEFAULT_MQTT_PORT: u16 = 1883;
+
+    let mut rx_buffer = [0u8; 1024];
+    let mut tx_buffer = [0u8; 1024];
+    let mut delay = false;
+
+    loop {
+        if !delay {
+            delay = true;
+        } else {
+            crate::log::info!("Retrying connection in 5 seconds...");
+            Timer::after_secs(5).await;
+        }
+
+        let addr = {
+            // Try to parse as complete SocketAddrV4 first (e.g., "192.168.1.1:1883")
+            if let Ok(sock_addr) = address.parse::<SocketAddrV4>() {
+                sock_addr
+            }
+            // Try to parse as Ipv4Addr with default port (e.g., "192.168.1.1")
+            else if let Ok(ip_addr) = address.parse::<Ipv4Addr>() {
+                SocketAddrV4::new(ip_addr, DEFAULT_MQTT_PORT)
+            }
+            // Otherwise, parse as hostname:port or hostname
+            else {
+                let (addr_str, port) = match address.split_once(':') {
+                    Some((addr_str, port_str)) => {
+                        let port = port_str
+                            .parse::<u16>()
+                            .expect("Invalid port number in address");
+                        (addr_str, port)
+                    }
+                    None => (address, DEFAULT_MQTT_PORT),
+                };
+
+                let addrs = match stack
+                    .dns_query(addr_str, embassy_net::dns::DnsQueryType::A)
+                    .await
+                {
+                    Ok(addrs) => addrs,
+                    Err(err) => {
+                        crate::log::error!(
+                            "DNS query for '{}' failed with: {:?}",
+                            addr_str,
+                            crate::log::Debug2Format(&err)
+                        );
+                        continue;
+                    }
+                };
+
+                let ipv4_addr = match addrs
+                    .iter()
+                    .filter_map(|addr| match addr {
+                        embassy_net::IpAddress::Ipv4(ipv4) => Some((*ipv4).into()),
+                    })
+                    .next()
+                {
+                    Some(addr) => addr,
+                    None => {
+                        crate::log::error!(
+                            "DNS query for '{}' returned no IPv4 addresses",
+                            addr_str
+                        );
+                        continue;
+                    }
+                };
+
+                SocketAddrV4::new(ipv4_addr, port)
+            }
+        };
+
+        crate::log::info!("Connecting to MQTT broker at {}", addr);
+
+        let mut socket = TcpSocket::new(stack, &mut rx_buffer, &mut tx_buffer);
+        socket.set_timeout(Some(embassy_time::Duration::from_secs(10)));
+
+        if let Err(err) = socket.connect(addr).await {
+            crate::log::error!(
+                "TCP connect to {} failed with: {:?}",
+                addr,
+                crate::log::Debug2Format(&err)
+            );
+            continue;
+        }
+
+        if let Err(err) = device.run(&mut socket).await {
+            crate::log::error!(
+                "Device run failed with: {:?}",
+                crate::log::Debug2Format(&err)
+            );
         }
     }
 }

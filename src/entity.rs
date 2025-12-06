@@ -33,4 +33,5 @@ pub struct EntityConfig {
     pub max: Option<f32>,
     pub step: Option<f32>,
     pub mode: Option<&'static str>,
+    pub suggested_display_precision: Option<u8>,
 }

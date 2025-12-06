@@ -115,6 +115,9 @@ struct EntityDiscovery<'a> {
     #[serde(skip_serializing_if = "Option::is_none")]
     mode: Option<&'a str>,
 
+    #[serde(skip_serializing_if = "Option::is_none")]
+    suggested_display_precision: Option<u8>,
+
     device: &'a DeviceDiscovery<'a>,
 }
 
@@ -427,11 +430,11 @@ impl<'a> Device<'a> {
         }
     }
 
-    pub fn create_temperature_sensor(
+    pub fn create_sensor(
         &self,
         id: &'static str,
-        config: TemperatureSensorConfig,
-    ) -> TemperatureSensor<'a> {
+        config: SensorConfig,
+    ) -> Sensor<'a> {
         let mut entity_config = EntityConfig::default();
         entity_config.id = id;
         config.populate(&mut entity_config);
@@ -440,7 +443,7 @@ impl<'a> Device<'a> {
             entity_config,
             EntityStorage::NumericSensor(Default::default()),
         );
-        TemperatureSensor::new(entity)
+        Sensor::new(entity)
     }
 
     pub fn create_button(&self, id: &'static str, config: ButtonConfig) -> Button<'a> {
@@ -573,6 +576,7 @@ impl<'a> Device<'a> {
                     max: entity_config.max,
                     step: entity_config.step,
                     mode: entity_config.mode,
+                    suggested_display_precision: entity_config.suggested_display_precision,
                     device: &device_discovery,
                 };
                 crate::log::debug!(

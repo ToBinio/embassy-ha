@@ -1,5 +1,5 @@
 use crate::{
-    Entity, EntityCommonConfig, EntityConfig, NumericSensorState, TemperatureUnit, constants,
+    Entity, EntityCommonConfig, EntityConfig, NumericSensorState, constants,
 };
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -144,36 +144,41 @@ impl SensorClass {
 }
 
 #[derive(Debug, Default)]
-pub struct TemperatureSensorConfig {
+pub struct SensorConfig {
     pub common: EntityCommonConfig,
-    pub unit: TemperatureUnit,
+    pub class: SensorClass,
+    pub state_class: StateClass,
+    pub unit: Option<&'static str>,
+    pub suggested_display_precision: Option<u8>,
 }
 
-impl TemperatureSensorConfig {
+impl SensorConfig {
     pub(crate) fn populate(&self, config: &mut EntityConfig) {
         self.common.populate(config);
         config.domain = constants::HA_DOMAIN_SENSOR;
-        config.device_class = Some(constants::HA_DEVICE_CLASS_SENSOR_TEMPERATURE);
-        config.measurement_unit = Some(self.unit.as_str());
+        config.device_class = self.class.as_str();
+        config.state_class = Some(self.state_class.as_str());
+        config.measurement_unit = self.unit;
+        config.suggested_display_precision = self.suggested_display_precision;
     }
 }
 
-pub struct TemperatureSensor<'a>(Entity<'a>);
+pub struct Sensor<'a>(Entity<'a>);
 
-impl<'a> TemperatureSensor<'a> {
+impl<'a> Sensor<'a> {
     pub(crate) fn new(entity: Entity<'a>) -> Self {
         Self(entity)
     }
 
-    pub fn publish(&mut self, temperature: f32) {
+    pub fn publish(&mut self, value: f32) {
         let publish = self.0.with_data(|data| {
             let storage = data.storage.as_numeric_sensor_mut();
             let prev_state = storage.state.replace(NumericSensorState {
-                value: temperature,
+                value,
                 timestamp: embassy_time::Instant::now(),
             });
             match prev_state {
-                Some(state) => state.value != temperature,
+                Some(state) => state.value != value,
                 None => true,
             }
         });

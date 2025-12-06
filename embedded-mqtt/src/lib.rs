@@ -71,6 +71,7 @@ where
 pub struct ConnectParams<'a> {
     pub will_topic: Option<&'a str>,
     pub will_payload: Option<&'a [u8]>,
+    pub will_retain: bool,
     pub username: Option<&'a str>,
     pub password: Option<&'a [u8]>,
     pub keepalive: Option<u16>,
@@ -197,7 +198,7 @@ where
                 password: params.password,
                 will_topic: params.will_topic,
                 will_payload: params.will_payload,
-                will_retain: false,
+                will_retain: params.will_retain,
                 keepalive: None,
             },
         );

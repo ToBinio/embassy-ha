@@ -541,6 +541,7 @@ impl<'a> Device<'a> {
         let connect_params = embedded_mqtt::ConnectParams {
             will_topic: Some(availability_topic),
             will_payload: Some(NOT_AVAILABLE_PAYLOAD.as_bytes()),
+            will_retain: true,
             ..Default::default()
         };
         if let Err(err) = client
@@ -665,7 +666,14 @@ impl<'a> Device<'a> {
         }
 
         if let Err(err) = client
-            .publish(availability_topic, AVAILABLE_PAYLOAD.as_bytes())
+            .publish_with(
+                availability_topic,
+                AVAILABLE_PAYLOAD.as_bytes(),
+                embedded_mqtt::PublishParams {
+                    retain: true,
+                    ..Default::default()
+                },
+            )
             .await
         {
             crate::log::error!(

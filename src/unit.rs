@@ -365,7 +365,9 @@ impl NumberUnit {
             NumberUnit::MeterPerSecond => crate::constants::HA_UNIT_SPEED_METER_PER_SECOND,
             NumberUnit::MilePerHour => crate::constants::HA_UNIT_SPEED_MILE_PER_HOUR,
             NumberUnit::MillimeterPerDay => crate::constants::HA_UNIT_SPEED_MILLIMETER_PER_DAY,
-            NumberUnit::MillimeterPerSecond => crate::constants::HA_UNIT_SPEED_MILLIMETER_PER_SECOND,
+            NumberUnit::MillimeterPerSecond => {
+                crate::constants::HA_UNIT_SPEED_MILLIMETER_PER_SECOND
+            }
             // Distance
             NumberUnit::Kilometer => crate::constants::HA_UNIT_DISTANCE_KILOMETER,
             NumberUnit::Meter => crate::constants::HA_UNIT_DISTANCE_METER,
@@ -397,12 +399,24 @@ impl NumberUnit {
             NumberUnit::MegaBitPerSecond => crate::constants::HA_UNIT_DATA_RATE_MEGABIT_PER_SECOND,
             NumberUnit::GigaBitPerSecond => crate::constants::HA_UNIT_DATA_RATE_GIGABIT_PER_SECOND,
             NumberUnit::BytePerSecond => crate::constants::HA_UNIT_DATA_RATE_BYTE_PER_SECOND,
-            NumberUnit::KiloBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_KILOBYTE_PER_SECOND,
-            NumberUnit::MegaBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_MEGABYTE_PER_SECOND,
-            NumberUnit::GigaBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_GIGABYTE_PER_SECOND,
-            NumberUnit::KibiBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_KIBIBYTE_PER_SECOND,
-            NumberUnit::MebiBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_MEBIBYTE_PER_SECOND,
-            NumberUnit::GibiBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_GIBIBYTE_PER_SECOND,
+            NumberUnit::KiloBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_KILOBYTE_PER_SECOND
+            }
+            NumberUnit::MegaBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_MEGABYTE_PER_SECOND
+            }
+            NumberUnit::GigaBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_GIGABYTE_PER_SECOND
+            }
+            NumberUnit::KibiBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_KIBIBYTE_PER_SECOND
+            }
+            NumberUnit::MebiBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_MEBIBYTE_PER_SECOND
+            }
+            NumberUnit::GibiBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_GIBIBYTE_PER_SECOND
+            }
             // Weight
             NumberUnit::Kilogram => crate::constants::HA_UNIT_WEIGHT_KILOGRAM,
             NumberUnit::Gram => crate::constants::HA_UNIT_WEIGHT_GRAM,
@@ -631,7 +645,9 @@ impl Unit {
             Unit::NumberMeterPerSecond => crate::constants::HA_UNIT_SPEED_METER_PER_SECOND,
             Unit::NumberMilePerHour => crate::constants::HA_UNIT_SPEED_MILE_PER_HOUR,
             Unit::NumberMillimeterPerDay => crate::constants::HA_UNIT_SPEED_MILLIMETER_PER_DAY,
-            Unit::NumberMillimeterPerSecond => crate::constants::HA_UNIT_SPEED_MILLIMETER_PER_SECOND,
+            Unit::NumberMillimeterPerSecond => {
+                crate::constants::HA_UNIT_SPEED_MILLIMETER_PER_SECOND
+            }
             Unit::NumberKilometer => crate::constants::HA_UNIT_DISTANCE_KILOMETER,
             Unit::NumberMeter => crate::constants::HA_UNIT_DISTANCE_METER,
             Unit::NumberCentimeter => crate::constants::HA_UNIT_DISTANCE_CENTIMETER,
@@ -658,12 +674,24 @@ impl Unit {
             Unit::NumberMegaBitPerSecond => crate::constants::HA_UNIT_DATA_RATE_MEGABIT_PER_SECOND,
             Unit::NumberGigaBitPerSecond => crate::constants::HA_UNIT_DATA_RATE_GIGABIT_PER_SECOND,
             Unit::NumberBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_BYTE_PER_SECOND,
-            Unit::NumberKiloBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_KILOBYTE_PER_SECOND,
-            Unit::NumberMegaBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_MEGABYTE_PER_SECOND,
-            Unit::NumberGigaBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_GIGABYTE_PER_SECOND,
-            Unit::NumberKibiBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_KIBIBYTE_PER_SECOND,
-            Unit::NumberMebiBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_MEBIBYTE_PER_SECOND,
-            Unit::NumberGibiBytePerSecond => crate::constants::HA_UNIT_DATA_RATE_GIBIBYTE_PER_SECOND,
+            Unit::NumberKiloBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_KILOBYTE_PER_SECOND
+            }
+            Unit::NumberMegaBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_MEGABYTE_PER_SECOND
+            }
+            Unit::NumberGigaBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_GIGABYTE_PER_SECOND
+            }
+            Unit::NumberKibiBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_KIBIBYTE_PER_SECOND
+            }
+            Unit::NumberMebiBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_MEBIBYTE_PER_SECOND
+            }
+            Unit::NumberGibiBytePerSecond => {
+                crate::constants::HA_UNIT_DATA_RATE_GIBIBYTE_PER_SECOND
+            }
             Unit::NumberKilogram => crate::constants::HA_UNIT_WEIGHT_KILOGRAM,
             Unit::NumberGram => crate::constants::HA_UNIT_WEIGHT_GRAM,
             Unit::NumberMilligram => crate::constants::HA_UNIT_WEIGHT_MILLIGRAM,

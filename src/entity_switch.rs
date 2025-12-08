@@ -1,4 +1,6 @@
-use crate::{BinaryState, Entity, EntityCommonConfig, EntityConfig, SwitchCommand, SwitchState, constants};
+use crate::{
+    BinaryState, Entity, EntityCommonConfig, EntityConfig, SwitchCommand, SwitchState, constants,
+};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum SwitchClass {

@@ -1,6 +1,4 @@
-use crate::{
-    Entity, EntityCommonConfig, EntityConfig, NumericSensorState, constants,
-};
+use crate::{Entity, EntityCommonConfig, EntityConfig, NumericSensorState, constants};
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub enum StateClass {
@@ -90,7 +88,9 @@ impl SensorClass {
             SensorClass::Other(s) => Some(s),
             SensorClass::ApparentPower => Some(constants::HA_DEVICE_CLASS_SENSOR_APPARENT_POWER),
             SensorClass::Aqi => Some(constants::HA_DEVICE_CLASS_SENSOR_AQI),
-            SensorClass::AtmosphericPressure => Some(constants::HA_DEVICE_CLASS_SENSOR_ATMOSPHERIC_PRESSURE),
+            SensorClass::AtmosphericPressure => {
+                Some(constants::HA_DEVICE_CLASS_SENSOR_ATMOSPHERIC_PRESSURE)
+            }
             SensorClass::Battery => Some(constants::HA_DEVICE_CLASS_SENSOR_BATTERY),
             SensorClass::CarbonDioxide => Some(constants::HA_DEVICE_CLASS_SENSOR_CARBON_DIOXIDE),
             SensorClass::CarbonMonoxide => Some(constants::HA_DEVICE_CLASS_SENSOR_CARBON_MONOXIDE),
@@ -110,8 +110,12 @@ impl SensorClass {
             SensorClass::Irradiance => Some(constants::HA_DEVICE_CLASS_SENSOR_IRRADIANCE),
             SensorClass::Moisture => Some(constants::HA_DEVICE_CLASS_SENSOR_MOISTURE),
             SensorClass::Monetary => Some(constants::HA_DEVICE_CLASS_SENSOR_MONETARY),
-            SensorClass::NitrogenDioxide => Some(constants::HA_DEVICE_CLASS_SENSOR_NITROGEN_DIOXIDE),
-            SensorClass::NitrogenMonoxide => Some(constants::HA_DEVICE_CLASS_SENSOR_NITROGEN_MONOXIDE),
+            SensorClass::NitrogenDioxide => {
+                Some(constants::HA_DEVICE_CLASS_SENSOR_NITROGEN_DIOXIDE)
+            }
+            SensorClass::NitrogenMonoxide => {
+                Some(constants::HA_DEVICE_CLASS_SENSOR_NITROGEN_MONOXIDE)
+            }
             SensorClass::NitrousOxide => Some(constants::HA_DEVICE_CLASS_SENSOR_NITROUS_OXIDE),
             SensorClass::Ozone => Some(constants::HA_DEVICE_CLASS_SENSOR_OZONE),
             SensorClass::Ph => Some(constants::HA_DEVICE_CLASS_SENSOR_PH),
@@ -121,7 +125,9 @@ impl SensorClass {
             SensorClass::PowerFactor => Some(constants::HA_DEVICE_CLASS_SENSOR_POWER_FACTOR),
             SensorClass::Power => Some(constants::HA_DEVICE_CLASS_SENSOR_POWER),
             SensorClass::Precipitation => Some(constants::HA_DEVICE_CLASS_SENSOR_PRECIPITATION),
-            SensorClass::PrecipitationIntensity => Some(constants::HA_DEVICE_CLASS_SENSOR_PRECIPITATION_INTENSITY),
+            SensorClass::PrecipitationIntensity => {
+                Some(constants::HA_DEVICE_CLASS_SENSOR_PRECIPITATION_INTENSITY)
+            }
             SensorClass::Pressure => Some(constants::HA_DEVICE_CLASS_SENSOR_PRESSURE),
             SensorClass::ReactivePower => Some(constants::HA_DEVICE_CLASS_SENSOR_REACTIVE_POWER),
             SensorClass::SignalStrength => Some(constants::HA_DEVICE_CLASS_SENSOR_SIGNAL_STRENGTH),
@@ -130,8 +136,12 @@ impl SensorClass {
             SensorClass::SulphurDioxide => Some(constants::HA_DEVICE_CLASS_SENSOR_SULPHUR_DIOXIDE),
             SensorClass::Temperature => Some(constants::HA_DEVICE_CLASS_SENSOR_TEMPERATURE),
             SensorClass::Timestamp => Some(constants::HA_DEVICE_CLASS_SENSOR_TIMESTAMP),
-            SensorClass::VolatileOrganicCompounds => Some(constants::HA_DEVICE_CLASS_SENSOR_VOLATILE_ORGANIC_COMPOUNDS),
-            SensorClass::VolatileOrganicCompoundsParts => Some(constants::HA_DEVICE_CLASS_SENSOR_VOLATILE_ORGANIC_COMPOUNDS_PARTS),
+            SensorClass::VolatileOrganicCompounds => {
+                Some(constants::HA_DEVICE_CLASS_SENSOR_VOLATILE_ORGANIC_COMPOUNDS)
+            }
+            SensorClass::VolatileOrganicCompoundsParts => {
+                Some(constants::HA_DEVICE_CLASS_SENSOR_VOLATILE_ORGANIC_COMPOUNDS_PARTS)
+            }
             SensorClass::Voltage => Some(constants::HA_DEVICE_CLASS_SENSOR_VOLTAGE),
             SensorClass::Volume => Some(constants::HA_DEVICE_CLASS_SENSOR_VOLUME),
             SensorClass::VolumeFlowRate => Some(constants::HA_DEVICE_CLASS_SENSOR_VOLUME_FLOW_RATE),

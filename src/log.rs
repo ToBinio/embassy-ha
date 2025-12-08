@@ -112,4 +112,4 @@ macro_rules! error {
 }
 
 // Re-export the macros at the module level for easier use
-pub use crate::{trace, debug, info, warn, error};
+pub use crate::{debug, error, info, trace, warn};

@@ -20,7 +20,11 @@ async fn main_task(spawner: Spawner) {
         },
     );
 
-    let button = embassy_ha::create_button(&device, "button-sensor-id", embassy_ha::ButtonConfig::default());
+    let button = embassy_ha::create_button(
+        &device,
+        "button-sensor-id",
+        embassy_ha::ButtonConfig::default(),
+    );
 
     spawner.must_spawn(button_task(button));
 

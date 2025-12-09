@@ -1,3 +1,7 @@
+//! mqtt client library for embedded devices.
+//!
+
+
 #![no_std]
 
 mod connect_code;

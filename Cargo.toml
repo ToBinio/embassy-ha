@@ -16,25 +16,25 @@ defmt = ["dep:defmt", "embassy-net/defmt", "embassy-sync/defmt"]
 tracing = ["dep:tracing"]
 
 [dependencies]
-embedded-mqtt = { path = "./embedded-mqtt" }
-embassy-net = { version = "0.7.1", features = ["medium-ip", "proto-ipv4", "tcp", "dns"] }
-heapless = "0.9.2"
-embassy-time = { version = "0.5.0" }
-serde-json-core = "0.6.0"
-serde = { version = "1.0.228", default-features = false, features = ["derive"] }
-defmt = { version = "1.0.1", optional = true }
+embedded-mqtt = { version = "0.1", path = "./embedded-mqtt" }
+embassy-net = { version = "0.7", features = ["medium-ip", "proto-ipv4", "tcp", "dns"] }
+heapless = "0.9"
+embassy-time = { version = "0.5" }
+serde-json-core = "0.6"
+serde = { version = "1", default-features = false, features = ["derive"] }
+defmt = { version = "1", optional = true }
 tracing = { version = "0.1", optional = true, default-features = false }
-embassy-sync = { version = "0.7.2" }
-embassy-futures = "0.1.2"
+embassy-sync = { version = "0.7" }
+embassy-futures = "0.1"
 embedded-io-async = "0.6"
 
 [dev-dependencies]
-embassy-time = { version = "0.5.0", features = ["std"] }
-embassy-executor = { version = "0.9.1", features = ["arch-std", "executor-thread"] }
-embassy-sync = { version = "0.7.2" }
-static_cell = "2.1.1"
+embassy-time = { version = "0.5", features = ["std"] }
+embassy-executor = { version = "0.9", features = ["arch-std", "executor-thread"] }
+embassy-sync = { version = "0.7" }
+static_cell = "2.1"
 embedded-io-async = { version = "0.6", features = ["std"] }
 critical-section = { version = "1", features = ["std"] }
-rand = "0.9.2"
+rand = "0.9"
 tracing-subscriber = "0.3"
 tracing = "0.1"

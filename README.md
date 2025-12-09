@@ -3,6 +3,7 @@
 Home Assistant MQTT device library for embassy.
 
 To create a device use the [`new`] function.
+
 After the device is created you should create one or more entities using functions such as
 [`create_button`]/[`create_sensor`]/...
 

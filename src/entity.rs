@@ -18,7 +18,7 @@ impl EntityCommonConfig {
 }
 
 #[derive(Default)]
-pub struct EntityConfig {
+pub(crate) struct EntityConfig {
     pub id: &'static str,
     pub name: Option<&'static str>,
     pub domain: &'static str,

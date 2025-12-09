@@ -24,6 +24,7 @@
 pub use defmt::Format;
 
 // For tracing or no logging, we provide a stub Format trait
+#[allow(unused)]
 #[cfg(not(feature = "defmt"))]
 pub trait Format {}
 
@@ -113,4 +114,5 @@ macro_rules! error {
 }
 
 // Re-export the macros at the module level for easier use
+#[allow(unused)]
 pub use crate::{debug, error, info, trace, warn};

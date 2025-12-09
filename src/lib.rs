@@ -1,6 +1,7 @@
 //! Home Assistant MQTT device library for embassy.
 //!
 //! To create a device use the [`new`] function.
+//!
 //! After the device is created you should create one or more entities using functions such as
 //! [`create_button`]/[`create_sensor`]/...
 //!
@@ -30,8 +31,9 @@ use serde::Serialize;
 
 mod mqtt;
 
-pub mod log;
-pub use log::Format;
+mod log;
+#[allow(unused)]
+use log::Format;
 
 pub mod constants;
 
@@ -250,73 +252,79 @@ impl Default for DeviceResources {
 }
 
 #[derive(Debug, Default)]
-pub struct ButtonStorage {
+pub(crate) struct ButtonStorage {
     pub timestamp: Option<embassy_time::Instant>,
     pub consumed: bool,
 }
 
 #[derive(Debug)]
-pub struct SwitchCommand {
+pub(crate) struct SwitchCommand {
     pub value: BinaryState,
+    #[allow(unused)]
     pub timestamp: embassy_time::Instant,
 }
 
 #[derive(Debug)]
-pub struct SwitchState {
+pub(crate) struct SwitchState {
     pub value: BinaryState,
+    #[allow(unused)]
     pub timestamp: embassy_time::Instant,
 }
 
 #[derive(Debug, Default)]
-pub struct SwitchStorage {
+pub(crate) struct SwitchStorage {
     pub state: Option<SwitchState>,
     pub command: Option<SwitchCommand>,
     pub publish_on_command: bool,
 }
 
 #[derive(Debug)]
-pub struct BinarySensorState {
+pub(crate) struct BinarySensorState {
     pub value: BinaryState,
+    #[allow(unused)]
     pub timestamp: embassy_time::Instant,
 }
 
 #[derive(Debug, Default)]
-pub struct BinarySensorStorage {
+pub(crate) struct BinarySensorStorage {
     pub state: Option<BinarySensorState>,
 }
 
 #[derive(Debug)]
-pub struct NumericSensorState {
+pub(crate) struct NumericSensorState {
     pub value: f32,
+    #[allow(unused)]
     pub timestamp: embassy_time::Instant,
 }
 
 #[derive(Debug, Default)]
-pub struct NumericSensorStorage {
+pub(crate) struct NumericSensorStorage {
     pub state: Option<NumericSensorState>,
 }
 
 #[derive(Debug)]
-pub struct NumberState {
+pub(crate) struct NumberState {
     pub value: f32,
+    #[allow(unused)]
     pub timestamp: embassy_time::Instant,
 }
 
 #[derive(Debug)]
-pub struct NumberCommand {
+pub(crate) struct NumberCommand {
     pub value: f32,
+    #[allow(unused)]
     pub timestamp: embassy_time::Instant,
 }
 
 #[derive(Debug, Default)]
-pub struct NumberStorage {
+pub(crate) struct NumberStorage {
     pub state: Option<NumberState>,
     pub command: Option<NumberCommand>,
     pub publish_on_command: bool,
 }
 
 #[derive(Debug)]
-pub enum EntityStorage {
+pub(crate) enum EntityStorage {
     Button(ButtonStorage),
     Switch(SwitchStorage),
     BinarySensor(BinarySensorStorage),
@@ -369,7 +377,7 @@ struct EntityData {
     command_waker: Option<Waker>,
 }
 
-pub struct Entity<'a> {
+pub(crate) struct Entity<'a> {
     pub(crate) data: &'a RefCell<Option<EntityData>>,
     pub(crate) waker: &'a AtomicWaker,
 }

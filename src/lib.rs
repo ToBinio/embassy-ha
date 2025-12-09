@@ -485,8 +485,10 @@ pub fn create_sensor<'a>(
     id: &'static str,
     config: SensorConfig,
 ) -> Sensor<'a> {
-    let mut entity_config = EntityConfig::default();
-    entity_config.id = id;
+    let mut entity_config = EntityConfig {
+        id,
+        ..Default::default()
+    };
     config.populate(&mut entity_config);
 
     let entity = create_entity(
@@ -502,8 +504,10 @@ pub fn create_button<'a>(
     id: &'static str,
     config: ButtonConfig,
 ) -> Button<'a> {
-    let mut entity_config = EntityConfig::default();
-    entity_config.id = id;
+    let mut entity_config = EntityConfig {
+        id,
+        ..Default::default()
+    };
     config.populate(&mut entity_config);
 
     let entity = create_entity(
@@ -519,8 +523,10 @@ pub fn create_number<'a>(
     id: &'static str,
     config: NumberConfig,
 ) -> Number<'a> {
-    let mut entity_config = EntityConfig::default();
-    entity_config.id = id;
+    let mut entity_config = EntityConfig {
+        id,
+        ..Default::default()
+    };
     config.populate(&mut entity_config);
 
     let entity = create_entity(
@@ -539,8 +545,10 @@ pub fn create_switch<'a>(
     id: &'static str,
     config: SwitchConfig,
 ) -> Switch<'a> {
-    let mut entity_config = EntityConfig::default();
-    entity_config.id = id;
+    let mut entity_config = EntityConfig {
+        id,
+        ..Default::default()
+    };
     config.populate(&mut entity_config);
 
     let entity = create_entity(
@@ -559,8 +567,10 @@ pub fn create_binary_sensor<'a>(
     id: &'static str,
     config: BinarySensorConfig,
 ) -> BinarySensor<'a> {
-    let mut entity_config = EntityConfig::default();
-    entity_config.id = id;
+    let mut entity_config = EntityConfig {
+        id,
+        ..Default::default()
+    };
     config.populate(&mut entity_config);
 
     let entity = create_entity(
@@ -693,7 +703,7 @@ pub async fn run<T: Transport>(device: &mut Device<'_>, transport: &mut T) -> Re
                 .discovery_buffer
                 .resize(device.discovery_buffer.capacity(), 0)
                 .unwrap();
-            let n = serde_json_core::to_slice(&discovery, &mut device.discovery_buffer)
+            let n = serde_json_core::to_slice(&discovery, device.discovery_buffer)
                 .expect("discovery buffer too small");
             device.discovery_buffer.truncate(n);
         }
@@ -702,7 +712,7 @@ pub async fn run<T: Transport>(device: &mut Device<'_>, transport: &mut T) -> Re
         crate::log::debug!("sending discovery to topic '{}'", discovery_topic);
         match embassy_time::with_timeout(
             MQTT_TIMEOUT,
-            client.publish(discovery_topic, &device.discovery_buffer),
+            client.publish(discovery_topic, device.discovery_buffer),
         )
         .await
         {
@@ -1077,10 +1087,12 @@ pub async fn connect_and_run(
                     }
                 };
 
+                #[allow(unreachable_patterns)]
                 let ipv4_addr = match addrs
                     .iter()
                     .filter_map(|addr| match addr {
-                        embassy_net::IpAddress::Ipv4(ipv4) => Some((*ipv4).into()),
+                        embassy_net::IpAddress::Ipv4(ipv4) => Some(*ipv4),
+                        _ => None,
                     })
                     .next()
                 {

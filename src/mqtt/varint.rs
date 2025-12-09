@@ -41,8 +41,8 @@ pub fn encode(mut v: u32) -> ([u8; 4], usize) {
 pub fn decode(buf: &[u8]) -> Result<(u32, usize), Error> {
     let mut value = 0u32;
 
-    let v = buf.get(0).ok_or(Error::NeedMoreData)?;
-    value |= ((v & 0x7F) as u32) << 0;
+    let v = buf.first().ok_or(Error::NeedMoreData)?;
+    value |= (v & 0x7F) as u32;
     if v & 0x80 == 0 {
         return Ok((value, 1));
     }

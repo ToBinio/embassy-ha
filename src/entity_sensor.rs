@@ -19,7 +19,9 @@ impl StateClass {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Default)]
 pub enum SensorClass {
+    #[default]
     Generic,
     ApparentPower,
     Aqi,
@@ -75,11 +77,6 @@ pub enum SensorClass {
     Other(&'static str),
 }
 
-impl Default for SensorClass {
-    fn default() -> Self {
-        SensorClass::Generic
-    }
-}
 
 impl SensorClass {
     pub fn as_str(&self) -> Option<&'static str> {

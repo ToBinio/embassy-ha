@@ -9,6 +9,7 @@ impl core::fmt::Display for InvalidQos {
 
 impl core::error::Error for InvalidQos {}
 
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Qos {
     #[default]
@@ -28,7 +29,7 @@ impl core::fmt::Display for Qos {
 }
 
 impl Qos {
-    pub fn to_u8(&self) -> u8 {
+    pub fn to_u8(self) -> u8 {
         match self {
             Qos::AtMostOnce => 0,
             Qos::AtLeastOnce => 1,

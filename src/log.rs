@@ -32,6 +32,7 @@ pub trait Format {}
 pub use defmt::Debug2Format;
 
 // For tracing or no logging, Debug2Format is a passthrough
+#[allow(non_snake_case)]
 #[cfg(not(feature = "defmt"))]
 #[inline]
 pub fn Debug2Format<T>(value: &T) -> &T {
@@ -51,7 +52,7 @@ macro_rules! trace {
         tracing::trace!($($arg)*);
 
         #[cfg(not(any(feature = "defmt", feature = "tracing")))]
-        { let _ = (); } // no-op
+        { let _ = format_args!($($arg)*); } // no-op, format_args! borrows without moving
     };
 }
 
@@ -65,7 +66,7 @@ macro_rules! debug {
         tracing::debug!($($arg)*);
 
         #[cfg(not(any(feature = "defmt", feature = "tracing")))]
-        { let _ = (); } // no-op
+        { let _ = format_args!($($arg)*); } // no-op, format_args! borrows without moving
     };
 }
 
@@ -79,7 +80,7 @@ macro_rules! info {
         tracing::info!($($arg)*);
 
         #[cfg(not(any(feature = "defmt", feature = "tracing")))]
-        { let _ = (); } // no-op
+        { let _ = format_args!($($arg)*); } // no-op, format_args! borrows without moving
     };
 }
 
@@ -93,7 +94,7 @@ macro_rules! warn {
         tracing::warn!($($arg)*);
 
         #[cfg(not(any(feature = "defmt", feature = "tracing")))]
-        { let _ = (); } // no-op
+        { let _ = format_args!($($arg)*); } // no-op, format_args! borrows without moving
     };
 }
 
@@ -107,7 +108,7 @@ macro_rules! error {
         tracing::error!($($arg)*);
 
         #[cfg(not(any(feature = "defmt", feature = "tracing")))]
-        { let _ = (); } // no-op
+        { let _ = format_args!($($arg)*); } // no-op, format_args! borrows without moving
     };
 }
 

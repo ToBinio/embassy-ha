@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 mod connect_code;
 mod field;
 mod packet_id;
@@ -23,7 +25,7 @@ pub enum Error<T: Transport> {
     Transport(T::Error),
     TransportEOF,
     InsufficientBufferSpace,
-    ProtocolError(&'static str),
+    Protocol(&'static str),
     ConnectFailed(ConnectCode),
 }
 
@@ -33,7 +35,7 @@ impl<T: Transport> core::fmt::Debug for Error<T> {
             Error::Transport(err) => f.debug_tuple("Transport").field(err).finish(),
             Error::TransportEOF => f.write_str("TransportEOF"),
             Error::InsufficientBufferSpace => f.write_str("InsufficientBufferSpace"),
-            Error::ProtocolError(msg) => f.debug_tuple("ProtocolError").field(msg).finish(),
+            Error::Protocol(msg) => f.debug_tuple("ProtocolError").field(msg).finish(),
             Error::ConnectFailed(code) => f.debug_tuple("ConnectFailed").field(code).finish(),
         }
     }
@@ -47,7 +49,7 @@ impl<T: Transport> core::fmt::Display for Error<T> {
             Error::InsufficientBufferSpace => {
                 write!(f, "insufficient buffer space to receive packet")
             }
-            Error::ProtocolError(msg) => write!(f, "MQTT protocol error: {}", msg),
+            Error::Protocol(msg) => write!(f, "MQTT protocol error: {}", msg),
             Error::ConnectFailed(code) => write!(f, "connection failed: {}", code),
         }
     }
@@ -209,7 +211,7 @@ where
         // Wait for CONNACK response
         match self.receive_inner().await? {
             rx::Packet::ConnAck {
-                session_present,
+                session_present: _,
                 code,
             } => {
                 if code == ConnectCode::ConnectionAccepted {
@@ -218,7 +220,7 @@ where
                     Err(Error::ConnectFailed(code))
                 }
             }
-            _ => Err(Error::ProtocolError(
+            _ => Err(Error::Protocol(
                 "expected CONNACK packet after CONNECT",
             )),
         }
@@ -351,12 +353,12 @@ where
                             return Err(Error::InsufficientBufferSpace);
                         }
                     }
-                    rx::Error::InvalidPacket(msg) => return Err(Error::ProtocolError(msg)),
-                    rx::Error::UnsupportedPacket { packet_type, .. } => {
-                        return Err(Error::ProtocolError("unsupported packet type"));
+                    rx::Error::InvalidPacket(msg) => return Err(Error::Protocol(msg)),
+                    rx::Error::UnsupportedPacket { packet_type: _, .. } => {
+                        return Err(Error::Protocol("unsupported packet type"));
                     }
-                    rx::Error::UnknownPacket { packet_type, .. } => {
-                        return Err(Error::ProtocolError("unknown packet type"));
+                    rx::Error::UnknownPacket { packet_type: _, .. } => {
+                        return Err(Error::Protocol("unknown packet type"));
                     }
                 },
             }
@@ -367,9 +369,7 @@ where
 
     pub async fn receive<'s>(&'s mut self) -> Result<Packet<'s>, Error<T>> {
         match self.receive_inner().await? {
-            rx::Packet::ConnAck { .. } => {
-                return Err(Error::ProtocolError("unexpected CONNACK packet"));
-            }
+            rx::Packet::ConnAck { .. } => Err(Error::Protocol("unexpected CONNACK packet")),
             rx::Packet::Publish {
                 topic,
                 packet_id,
@@ -377,23 +377,19 @@ where
                 retain,
                 dup: _dup,
                 data_len,
-            } => {
-                return Ok(Packet::Publish(Publish {
-                    topic,
-                    packet_id,
-                    qos,
-                    retain,
-                    data_len,
-                }));
-            }
-            rx::Packet::PubAck { packet_id } => {
-                return Ok(Packet::PublishAck(PublishAck { packet_id }));
-            }
+            } => Ok(Packet::Publish(Publish {
+                topic,
+                packet_id,
+                qos,
+                retain,
+                data_len,
+            })),
+            rx::Packet::PubAck { packet_id } => Ok(Packet::PublishAck(PublishAck { packet_id })),
             rx::Packet::SubscribeAck { packet_id, success } => {
-                return Ok(Packet::SubscribeAck(SubscribeAck { packet_id, success }));
+                Ok(Packet::SubscribeAck(SubscribeAck { packet_id, success }))
             }
             rx::Packet::UnsubscribeAck { packet_id } => {
-                return Ok(Packet::UnsubscribeAck(UnsubscribeAck { packet_id }));
+                Ok(Packet::UnsubscribeAck(UnsubscribeAck { packet_id }))
             }
         }
     }

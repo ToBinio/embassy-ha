@@ -863,6 +863,7 @@ pub async fn run<T: Transport>(device: &mut Device<'_>, transport: &mut T) -> Re
         }
     }
 
+    let mut first_iteration_push = true;
     'outer_loop: loop {
         use core::fmt::Write;
 
@@ -874,7 +875,7 @@ pub async fn run<T: Transport>(device: &mut Device<'_>, transport: &mut T) -> Re
                     None => break,
                 };
 
-                if !entity.publish {
+                if !entity.publish && !first_iteration_push {
                     continue;
                 }
 
@@ -920,10 +921,12 @@ pub async fn run<T: Transport>(device: &mut Device<'_>, transport: &mut T) -> Re
                         device.publish_buffer.truncate(n);
                     }
                     _ => {
-                        crate::log::warn!(
-                            "entity '{}' requested state publish but its storage does not support it",
-                            entity.config.id
-                        );
+                        if !first_iteration_push {
+                            crate::log::warn!(
+                                "entity '{}' requested state publish but its storage does not support it",
+                                entity.config.id
+                            );
+                        }
                         continue;
                     }
                 }
@@ -970,6 +973,7 @@ pub async fn run<T: Transport>(device: &mut Device<'_>, transport: &mut T) -> Re
                 }
             }
         }
+        first_iteration_push = false;
 
         let receive = client.receive();
         let waker = wait_on_atomic_waker(device.waker);
